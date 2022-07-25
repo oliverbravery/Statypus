@@ -1,0 +1,6 @@
+{
+    "Challenges": {
+        "Challenge_1": {"name":"No Pistol", "type":"weaponTypeBan", "weaponType":"Pistol", "duration":"l"},
+        "Challenge_2": {"name":"No Machine Gun", "type":"weaponTypeBan", "weaponType":"Machine Gun", "duration":"lu"}
+    }
+}

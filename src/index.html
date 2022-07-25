@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>statypus</title>
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
+    <link href="https://unpkg.com/cirrus-ui" type="text/css" rel="stylesheet"/>
+    <script defer src="CSGOServer.js"></script>
+  </head>
+  <!-- <body>
+    <div id="content" class="">
+      <h1>🔍 statypus 🔎</h1>
+      <p>CS:GO stats</p>
+  
+      
+    </div>
+  </body> -->
+
+  <body>
+    <div class="header header-fixed unselectable header-animated">
+       <div class="header-brand">
+          <div class="nav-item no-hover">
+             <h6 class="title">Statypus</h6>
+          </div>
+          <div class="nav-item nav-btn" id="header-btn"> <span></span> <span></span> <span></span> </div>
+       </div>
+       <div class="header-nav" id="header-menu">
+          <div class="nav-left">
+             <div class="nav-item text-center"> <a href="#"> <span class="icon"> <i class="fab fa-wrapper fa-twitter" aria-hidden="true"></i> </span> </a> </div>
+          </div>
+          <div class="nav-right">
+             <div class="nav-item has-sub toggle-hover" id="dropdown">
+                <a class="nav-dropdown-link">Menu</a> 
+                <ul class="dropdown-menu dropdown-animated" role="menu">
+                   <li role="menu-item"><a href="#">Home Page</a></li>
+                   <li role="menu-item"><a href="#">Stats</a></li>
+                   <li role="menu-item"><a href="#">Challenges</a></li>
+                </ul>
+             </div>
+          </div>
+       </div>
+    </div>
+    <section class="section">
+       <div class="hero fullscreen">
+          <div class="hero-body">
+             <div class="content">
+                <div class="text-center">
+                   <h1>📈 Statypus 📉</h1>
+                   <h6 class="font-alt font-light">Stats for <b>CS:GO</b></h6>
+                   <br>
+                   <div id="home-statypus-connected">
+                    <h6 class="font-alt font-light">Statypus: <b id="statypusStatusText" class="text-warning">Not Connected</b></h6>
+                    <button id="btnSearchForStatypus" class="btn-primary" onclick="ConnectToStatypus()">Check For Statypus</button>
+                   </div>
+                </div>
+             </div>
+          </div>
+       </div>
+    </section>
+ </body>
+
+</html>

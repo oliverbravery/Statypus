@@ -1,0 +1,8 @@
+Completed random challenge with duration gen and checking 
+Completed all checks for type of gun
+
+Display data such as challenge in GUI
+Collect and store stats like kills and deaths
+Make statypus Stick
+
+                    <button id="btnNewChallenge" class="btn-success" onclick="GetNewChallenge()">NEW CHALLENGE</button>
