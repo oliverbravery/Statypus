@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <title>statypus</title>
-    <link rel="stylesheet" href="index.css" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
@@ -24,9 +23,8 @@
              <div class="nav-item has-sub toggle-hover" id="dropdown">
                 <a class="nav-dropdown-link">Menu</a> 
                 <ul class="dropdown-menu dropdown-animated" role="menu">
-                   <li role="menu-item"><a href="#">Home Page</a></li>
-                   <li role="menu-item"><a href="#">Stats</a></li>
-                   <li role="menu-item"><a href="#">Challenges</a></li>
+                   <li role="menu-item"><a href="index.html">Home Page</a></li>
+                   <li role="menu-item"><a href="DEVpage.html">DEV</a></li>
                 </ul>
              </div>
           </div>
@@ -36,18 +34,46 @@
     <section class="section">
       <div class="hero fullscreen">
          <div class="hero-body">
-            <div class="content">
-               <div class="text-center">
-                  <h1>📈 Statypus 📉</h1>
-                  <h6 class="font-alt font-light">Stats for <b>CS:GO</b></h6>
-                  <br>
-                  <div id="home-statypus-connected">
-                   <h6 class="font-alt font-light">Statypus: <b id="statypusStatusText" class="text-warning">Not Connected</b></h6>
-                   <button id="btnSearchForStatypus" class="btn-primary" onclick="ConnectToStatypus()">Check For Statypus</button>
-                   <button class="btn-primary" onclick="GetNewChallenge()">NEW CHALLENGE</button>
+            <div class="row">
+
+               <div class="col-6 uppercase">
+                  <div class="content">
+                     <div class="u-text-center">
+                        <h1>📈 Statypus 📉</h1>
+                        <h6 class="font-alt font-light">Stats for <b>CS:GO</b></h6>
+                        <br>
+                        <div id="home-statypus-connected">
+                         <h6 class="font-alt font-light">Statypus: <b id="statypusStatusText" class="text-warning">Not Connected</b></h6>
+                         <button id="btnSearchForStatypus" class="btn-primary" onclick="ConnectToStatypus()">Check For Statypus</button>
+                         <button class="btn-primary" onclick="GetNewChallenge()">NEW CHALLENGE</button>
+                        </div>
+                     </div>
                   </div>
                </div>
-            </div>
+
+               <div class="col-6 uppercase">
+                  <div class="content">
+                     <div class="u-text-center">
+                        <div class="row">
+
+                           <div class="col">
+                              <div class="card" >
+                                 <div class="content u-text-center pt-3">
+                                    <h3>🎯 CHALLENGE 🎯</h3>
+                                     <p id="lblChallengeName" class="title mt-2 mb-0">no active challenge</p>
+                                     <p id="lblChallengeDesc">connect the statypus device to the machine to start a challenge</p>
+                                     <p id="lblChallengeDuration"></p>
+                                     <p id="lblChallengeStatus"></p>
+                                 </div>
+                             </div>
+                           </div>
+
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+           </div>
          </div>
       </div>
    </section>

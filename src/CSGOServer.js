@@ -16,6 +16,10 @@ currentData = [0,0,0];
 
 currentRound = "null";
 gameInProgress = false;
+
+lastPacketReceived = "null";
+
+SetChallengeStats();
  
 server = http.createServer( function(req, res) 
 {
@@ -35,6 +39,7 @@ server = http.createServer( function(req, res)
 			{
 				try
 				{
+                    lastPacketReceived = new Date();
 					var data = JSON.parse(body);
                     if(IsInGame(data) && data.provider.steamid == data.player.steamid) {
                         CheckChallengeCompletion(data);
@@ -50,6 +55,7 @@ server = http.createServer( function(req, res)
                     else {
                         currentData = [0,0,0]; gameInProgress = false; currentRound = "null";
                     }
+                    SetChallengeStats();
 					// console.log("Received message: " + body);					
 				} catch (e) {}
 			}				
@@ -106,6 +112,10 @@ function GetChallenge() {
     return randomChallenge;
 }
 
+function StatypusConnected() {
+    return true;
+}
+
 function ConnectToStatypus() {
     //Connect to the statypus device. 1 if connected, 0 if not
     statypusConnected = true;
@@ -119,6 +129,7 @@ function ConnectToStatypus() {
 }
 
 function ChallengeComplete() {
+    SetChallengeStats();
     console.log("Chall complete");
     if(activeChallengeFailed){console.log("fail");}
     else {
@@ -139,7 +150,7 @@ function GetRandomNumber(Min,Max) {
 function CheckChallengeCompletion(data) {
     console.log("packet received");
     if(activeChallenge != "null"){
-        if(data.map.phase=='gameover' && activeChallengeDuration=="end") {ChallengeComplete();}
+        if(data.map.phase=="gameover" && activeChallengeDuration=="end") {ChallengeComplete();}
         else if(activeChallengeDuration != "end" && activeChallengeDuration != "null"){
             //Called when the challenge is round coutned
             currentRound = data.map.round;
@@ -151,24 +162,42 @@ function CheckChallengeCompletion(data) {
             //banning a type of weapon
             weaponsHeld = data.player.weapons;
             whObj = Object.values(weaponsHeld);
-            for(var i = 0; i < Object.keys(whObj).length; i++) {
-                weapon = whObj[i];
-                if(weapon.type==activeChallenge.weaponType) {
-                    if(weapon.ammo_clip < weapon.ammo_clip_max) {
-                        activeChallengeFailed = true;
-                        console.log("DEBUG: Challenge Failed");
-                        ChallengeComplete();
+            if(data.hasOwnProperty("previously")) {
+                prev = data.previously;
+                for(var i = 0; i < Object.keys(whObj).length; i++) {
+                    weapon = whObj[i];
+                    if(weapon.type==activeChallenge.weaponType) {
+                        console.log("Banning");
+                        if(prev.hasOwnProperty("player")) {
+                            plr = prev.player;
+                            if(plr.hasOwnProperty("weapons")) {
+                                priorWeapons = Object.values(prev.player.weapons);
+                                for(var j = 0; j < Object.keys(priorWeapons).length; j++) {
+                                    pWeap = priorWeapons[j];
+                                    if(pWeap.hasOwnProperty("ammo_clip")) {
+                                        if(Object.keys(data.player.weapons)[i] == Object.keys(prev.player.weapons)[j]) {
+                                            if(parseInt(pWeap.ammo_clip) > parseInt(weapon.ammo_clip)) {
+                                                activeChallengeFailed = true;
+                                                console.log("DEBUG: Challenge Failed");
+                                                ChallengeComplete();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
-
-
 }
 
 function GetNewChallenge() {
-    if(gameInProgress && currentRound != "null") {
+    var currentTime = new Date();
+    var tDiff = (currentTime.getTime() - lastPacketReceived.getTime()) / 1000; 
+    console.log(tDiff);
+    if(gameInProgress && currentRound != "null" && tDiff != "null" && (tDiff < 30)) {
         activeChallenge = GetChallenge();
         //l = 1-5; u = all game; lu = limited or unlimited
         if(activeChallenge.duration == "l") {activeChallengeDuration = GetRandomNumber(1,6);}
@@ -179,6 +208,43 @@ function GetNewChallenge() {
         console.log(activeChallenge.name);
         console.log(activeChallengeDuration);
         console.log("current round" + currentRound);
+        SetChallengeStats();
+    }
+}
+
+function SetChallengeStats() {
+    var lblChallengeTitle = document.getElementById("lblChallengeName");
+    var lblChallengeDesc = document.getElementById("lblChallengeDesc");
+    var lblChallengeDuration = document.getElementById("lblChallengeDuration");
+    var lblChallengeStatus = document.getElementById("lblChallengeStatus");
+    if(StatypusConnected()) {
+        if(activeChallenge != "null") {
+            aimForRound = activeChallengeStartRound+activeChallengeDuration;
+            lblChallengeTitle.classList = "text-dark";
+            lblChallengeTitle.innerText = activeChallenge.name;
+            lblChallengeDesc.innerText = activeChallenge.description;
+            if(activeChallengeDuration == "end") {lblChallengeDuration.innerText = "Duration: entire game";}
+            else {lblChallengeDuration.innerText = `${parseInt(aimForRound) - parseInt(currentRound)} round(s) remaining`;}
+            if(activeChallengeFailed){lblChallengeStatus.innerText = "challenge failed"; lblChallengeStatus.classList = "text-danger";}
+            else if(!activeChallengeFailed && ((parseInt(aimForRound) != parseInt(currentRound)) || activeChallengeDuration == "end")) 
+            {lblChallengeStatus.innerText = "challenge in progress"; lblChallengeStatus.classList = "text-warning";}
+            else if(!activeChallengeFailed) {lblChallengeStatus.innerText = "challenge completed"; lblChallengeStatus.classList = "text-success";}
+        }
+        else {
+            if(lblChallengeDesc.innerText == "connect the statypus device to the machine to start a challenge" || lblChallengeTitle.innerText == "no active challenge") {
+                lblChallengeTitle.innerText = "no active challenge";
+                lblChallengeTitle.classList = "text-warning";
+                lblChallengeDesc.innerText = "active challenges will be displayed here\n you must be in a game to start a challenge";
+            }
+        }
+    }
+    else {
+        lblChallengeTitle.innerText = "no active challenge";
+        lblChallengeTitle.classList = "text-warning";
+        lblChallengeDesc.innerText = "connect the statypus device to the machine to start a challenge";
+        lblChallengeStatus.innerText = ""; 
+        lblChallengeDuration.innerText = "";
+        lblChallengeStatus.classList = "text-warning";
     }
 }
 
