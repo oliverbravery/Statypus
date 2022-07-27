@@ -1,5 +1,9 @@
-Display K,A,D on Main screen (right of current content)
-Display current challenge on right of screen
+FIX: Score saying "NAN" in data file
+
+Comm with the Pico
+Add more challenges
+Make DEV tab show when connected to CSGO or delete DEV tab
+Show K A and D in another page using:
 
 
 
