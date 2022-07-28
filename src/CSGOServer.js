@@ -3,9 +3,16 @@ fs = require('fs');
 const { defaultMaxListeners } = require('events');
 const path = require('path');
 var readTextFile = require('read-text-file');
- 
+
+let serialport = require('serialport');
+
+//Ports for the CS:GO Game state integration server communication
 serverport = 50891;
 host = '127.0.0.1';
+
+//Ports for the statypus physical device	
+let portName = "COM4";
+let myPort = new SerialPort(portName, 9600);
 
 activeChallenge = "null";
 activeChallengeFailed = false;
