@@ -14,8 +14,12 @@ import ujson
 import machine
 import time
 import os
+from machine import Pin
+
+led = Pin(25, Pin.OUT)
 
 filePath = "saveConfig.json"
+templatePath = "template.json"
 
 def file_or_dir_exists(filename):
     try:
@@ -25,8 +29,11 @@ def file_or_dir_exists(filename):
         return False
         
 def CreateEmptyConfigJSON():
+    ft = open(templatePath)
+    stringData = ft.read()
+    ft.close()
     f = open(filePath, 'w')
-    f.write("""{"k":"0","a":"0","d":"0"}""")
+    f.write(str(stringData))
     f.close()
     
 def SaveToConfigJSON(newConfigJSON):
@@ -52,10 +59,16 @@ def AquireConfigJSON():
 
 def UpdateConfigJSON(newDetailsJSON):
     configJSON = AquireConfigJSON()
-    for key in configJSON:
-        if key in newDetailsJSON:
-            tNewVal = int(configJSON[key]) + int(newDetailsJSON[key])
-            configJSON[key] = tNewVal
+    for (kn, vn) in newDetailsJSON.items():
+       for (ko, vo) in configJSON.items():
+           if kn == ko:
+               #same key now need to get the same value
+               for (kn2, vn2) in vn.items():
+                   for (ko2, vo2) in vo.items():
+                       if ko2 == kn2:
+                           #same key record
+                           tNewVal = int(configJSON[ko][ko2]) + int(newDetailsJSON[kn][kn2])
+                           configJSON[ko][ko2] = tNewVal
     SaveToConfigJSON(configJSON)
     
 if __name__ == "__main__":
@@ -71,14 +84,19 @@ if __name__ == "__main__":
             jsonObj = ujson.loads(splitString)
         if "$GET-DATA" in serialRec:
             configJ = AquireConfigJSON()
-            print("!CONFIG" + ujson.dumps(configJ, separators=None))
+            print("\r\n!CONFIG" + ujson.dumps(configJ, separators=None))
         elif "$GET-CONNECTED" in serialRec:
-            print("!CONNECTED")
+            print("\r\n!CONNECTED")
         elif "$UPDATE-DATA" in serialRec:
             t1 = serialRec.find("{")
             t2 = serialRec[t1:]
             uiData = ujson.loads(t2)
             UpdateConfigJSON(uiData)
+        elif "$DEBUG" in serialRec:
+            print("\r\n!LED TOGGLED")
+            led.toggle()
+            
+            
                     
             
 

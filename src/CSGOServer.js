@@ -1,18 +1,13 @@
 http = require('http');
 fs = require('fs');
 const { defaultMaxListeners } = require('events');
+const { stat } = require('fs');
 const path = require('path');
 var readTextFile = require('read-text-file');
-
-let serialport = require('serialport');
-
-//Ports for the CS:GO Game state integration server communication
+const { SerialPort } = require('serialport');
+ 
 serverport = 50891;
 host = '127.0.0.1';
-
-//Ports for the statypus physical device	
-let portName = "COM4";
-let myPort = new SerialPort(portName, 9600);
 
 activeChallenge = "null";
 activeChallengeFailed = false;
@@ -25,6 +20,36 @@ currentRound = "null";
 gameInProgress = false;
 
 lastPacketReceived = "null";
+
+//For serial
+var statypusPort = new SerialPort({path: "COM4", baudRate: 9600, autoOpen: false,});
+statypusPort.setEncoding('ascii');
+statypusPort.open();
+statypusPort.on('open', function() {
+    console.log('Serial port open');
+    statypusPort.on('data', function(data) {
+        // console.log(data);
+        if(data.includes("!CONFIG")){
+            tempData = data.split("\r\n");
+            for(var i = 0; i < tempData.length; i++){
+                if(tempData[i].includes("!CONFIG")){
+                    var tempStr = tempData[i].substring(tempData[i].indexOf("{"));
+                    console.log("The data>"+ tempStr);
+                }
+            }
+        }
+        statypusPort.flush(err => {});
+    });
+});
+
+function UpdateStatypusData(incrementJSONString) {
+    statypusPort.write(`\r\n$UPDATE-DATA${incrementJSONString}`);
+}
+
+function RequestStatypusData() {
+    statypusPort.write(`\r\n$GET-DATA`);
+}
+//end serial
 
 SetChallengeStats();
  
@@ -56,7 +81,20 @@ server = http.createServer( function(req, res)
                         if(gameInProgress) {
                             currentRound = data.map.round; 
                         }
-                        if(IsInGame(data)) {UpdateCSVData(data.player.match_stats.kills, data.player.match_stats.assists, data.player.match_stats.deaths);}
+                        if(IsInGame(data)) {
+                            ik = data.player.match_stats.kills;
+                            ia = data.player.match_stats.assists;
+                            id = data.player.match_stats.deaths;
+                            var incrementVals = [0,0,0];
+                            if(ik != currentData[0]) {incrementVals[0]=ik-currentData[0];}
+                            if(ia != currentData[1]) {incrementVals[1]=ia-currentData[1];}
+                            if(id != currentData[2]) {incrementVals[2]=id-currentData[2];}
+                            currentData[0] = parseInt(ik);
+                            currentData[1] = parseInt(ia);
+                            currentData[2] = parseInt(id);
+                            var updateString = `{"player":{"kills":"${incrementVals[0]}","assists":"${incrementVals[1]}","deaths":"${incrementVals[2]}"}}`;
+                            UpdateStatypusData(updateString);
+                        }
                         else {currentData = [0,0,0]; gameInProgress = false; currentRound = "null";}
                     }
                     else {
@@ -83,30 +121,6 @@ function IsInGame(jData) {
     else {
         return false;
     }
-}
-
-function UpdateCSVData(ik,ia,id) {
-    //updates the kills assists and deaths by incrementing values by the amount
-    console.log("k:",ik," d:",id);
-    var incrementVals = [0,0,0];
-    if(ik != currentData[0]) {incrementVals[0]=ik-currentData[0];}
-    if(ia != currentData[1]) {incrementVals[1]=ia-currentData[1];}
-    if(id != currentData[2]) {incrementVals[2]=id-currentData[2];}
-    currentData[0] = parseInt(ik);
-    currentData[1] = parseInt(ia);
-    currentData[2] = parseInt(id);
-    let content = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
-    var cData =  content.split(",");
-    fs.writeFile(path.resolve(__dirname, 'temp/data.txt'), `${parseInt(cData[0]) + incrementVals[0]},${parseInt(cData[1])+ incrementVals[1]},${parseInt(cData[2]) + incrementVals[2]},${parseInt(cData[3])}`, function (err) {});
-}
-
-function UpdateCSVScore(doIncrement, value) {
-    //update score in csv
-    let content = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
-    var cData =  content.split(",");
-    var d = cData[3];
-    if(doIncrement) {d = parseInt(d) + parseInt(value);} else{d = parseInt(d) - parseInt(value);}
-    fs.writeFile(path.resolve(__dirname, 'temp/data.txt'), `${parseInt(cData[0])},${parseInt(cData[1])},${parseInt(cData[2])},${parseInt(d)}`, function (err) {});
 }
 
 function GetChallenge() {
@@ -142,7 +156,7 @@ function ChallengeComplete() {
     else {
         var calcPoints = parseInt(activeChallenge.points) * (parseInt(activeChallenge.roundMultiplier) * parseInt(activeChallengeDuration));
         console.log("Success");
-        UpdateCSVScore(true,calcPoints); 
+        UpdateStatypusData(`{"player":{"points":"${calcPoints}"}}`);
     }
     activeChallenge = "null";
     activeChallengeFailed = false;

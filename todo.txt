@@ -1,9 +1,6 @@
-FIX: Score saying "NAN" in data file
-
-Comm with the Pico
-Add more challenges
-Make DEV tab show when connected to CSGO or delete DEV tab
-Show K A and D in another page using:
+Create one listener on data 
+When need to update the data use a write method
+when need to get the data from board save stats in tempJSON file to fetch at later date
 
 
 
