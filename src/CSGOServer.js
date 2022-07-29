@@ -27,7 +27,9 @@ statypusPort.setEncoding('ascii');
 statypusPort.open();
 statypusPort.on('open', function() {
     console.log('Serial port open');
+    ConnectToStatypus();
     statypusPort.on('data', function(data) {
+        ConnectToStatypus();
         // console.log(data);
         if(data.includes("!CONFIG")){
             tempData = data.split("\r\n");
@@ -35,6 +37,10 @@ statypusPort.on('open', function() {
                 if(tempData[i].includes("!CONFIG")){
                     var tempStr = tempData[i].substring(tempData[i].indexOf("{"));
                     console.log("The data>"+ tempStr);
+                    try {
+                        fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
+                    }
+                    catch(err){console.log("error writing to file");}
                 }
             }
         }
@@ -133,19 +139,27 @@ function GetChallenge() {
     return randomChallenge;
 }
 
-function StatypusConnected() {
-    return true;
-}
-
 function ConnectToStatypus() {
-    //Connect to the statypus device. 1 if connected, 0 if not
-    statypusConnected = true;
-    if(statypusConnected) {
+    //Connect to the statypus device. returns true if connected, false if not
+    if(statypusPort.isOpen) {
         var buttonEl = document.getElementById("btnSearchForStatypus");
         buttonEl.classList = "btn-success";
         var textEl = document.getElementById("statypusStatusText");
         textEl.classList = "text-success";
         textEl.innerText = "Connected";
+        return true;
+    }
+    else {
+        try {
+            statypusPort.open();
+        }
+        catch(err){}
+        var buttonEl = document.getElementById("btnSearchForStatypus");
+        buttonEl.classList = "btn-warning";
+        var textEl = document.getElementById("statypusStatusText");
+        textEl.classList = "text-warning";
+        textEl.innerText = "Not Connected";
+        return false;
     }
 }
 

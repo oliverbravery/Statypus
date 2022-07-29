@@ -72,29 +72,31 @@ def UpdateConfigJSON(newDetailsJSON):
     SaveToConfigJSON(configJSON)
     
 if __name__ == "__main__":
-    while True:
-        serialRec = input()
-        jsonObj = "null"
-        if "{" in serialRec:
-            #contains a JSON object
-            #extract the json object part of the string beginning where it says $json
-            #save it to the jsonObj variable
-            startIndex = serialRec.find("{")
-            splitString = serialRec[startIndex:]
-            jsonObj = ujson.loads(splitString)
-        if "$GET-DATA" in serialRec:
-            configJ = AquireConfigJSON()
-            print("\r\n!CONFIG" + ujson.dumps(configJ, separators=None))
-        elif "$GET-CONNECTED" in serialRec:
-            print("\r\n!CONNECTED")
-        elif "$UPDATE-DATA" in serialRec:
-            t1 = serialRec.find("{")
-            t2 = serialRec[t1:]
-            uiData = ujson.loads(t2)
-            UpdateConfigJSON(uiData)
-        elif "$DEBUG" in serialRec:
-            print("\r\n!LED TOGGLED")
-            led.toggle()
+    programOn = True
+    while programOn:
+        try:
+            serialRec = input()
+            jsonObj = "null"
+            if "$GET-DATA" in serialRec:
+                configJ = AquireConfigJSON()
+                print("\r\n!CONFIG" + ujson.dumps(configJ, separators=None))
+            elif "$GET-CONNECTED" in serialRec:
+                print("\r\n!CONNECTED")
+            elif "$UPDATE-DATA" in serialRec:
+                startIndex = serialRec.find("{")
+                splitString = serialRec[startIndex:]
+                jsonObj = ujson.loads(splitString)
+                t1 = serialRec.find("{")
+                t2 = serialRec[t1:]
+                uiData = ujson.loads(t2)
+                UpdateConfigJSON(uiData)
+            elif "$DEBUG" in serialRec:
+                print("\r\n!LED TOGGLED")
+                led.toggle()
+            elif "$TURN-OFF-PROGRAM" in serialRec:
+                programOn = False
+        except:
+            print("")
             
             
                     
