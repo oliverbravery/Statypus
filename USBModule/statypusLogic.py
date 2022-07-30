@@ -57,18 +57,16 @@ def AquireConfigJSON():
         CreateEmptyConfigJSON()
         return AquireConfigJSON()
 
+def UpdateJSON(ud,d):
+    for k, v in ud.items():
+        if isinstance(v, dict):
+            UpdateJSON(v, d[k])
+        else:
+            d[k] = int(d[k]) + int(v)
+
 def UpdateConfigJSON(newDetailsJSON):
     configJSON = AquireConfigJSON()
-    for (kn, vn) in newDetailsJSON.items():
-       for (ko, vo) in configJSON.items():
-           if kn == ko:
-               #same key now need to get the same value
-               for (kn2, vn2) in vn.items():
-                   for (ko2, vo2) in vo.items():
-                       if ko2 == kn2:
-                           #same key record
-                           tNewVal = int(configJSON[ko][ko2]) + int(newDetailsJSON[kn][kn2])
-                           configJSON[ko][ko2] = tNewVal
+    UpdateJSON(newDetailsJSON, configJSON)
     SaveToConfigJSON(configJSON)
     
 if __name__ == "__main__":

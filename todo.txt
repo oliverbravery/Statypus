@@ -1,9 +1,3 @@
-Create one listener on data 
-When need to update the data use a write method
-when need to get the data from board save stats in tempJSON file to fetch at later date
-
-
-
                <div class="col-6 uppercase">
                   <div class="content">
                      <div class="u-text-center">

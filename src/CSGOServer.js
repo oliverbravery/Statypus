@@ -107,7 +107,8 @@ server = http.createServer( function(req, res)
                         currentData = [0,0,0]; gameInProgress = false; currentRound = "null";
                     }
                     SetChallengeStats();
-					// console.log("Received message: " + body);					
+                    UpdateStatypusWeaponDetails(data);
+					console.log("Received message: " + body);					
 				} catch (e) {}
 			}				
         });
@@ -126,6 +127,46 @@ function IsInGame(jData) {
     }
     else {
         return false;
+    }
+}
+
+function UpdateStatypusWeaponDetails(data) {
+    if(data.hasOwnProperty("previously")) {
+        if(data.hasOwnProperty("player")) {
+            if(data.player.hasOwnProperty("weapons")) {
+                priorWeapons = data.previously.player.weapons;
+                weaponsHeld = data.player.weapons;
+                whObj = Object.values(weaponsHeld);
+                prev = data.previously;
+                for(var i = 0; i < Object.keys(whObj).length; i++) {
+                    weapon = whObj[i];
+                    if(prev.hasOwnProperty("player")) {
+                        plr = prev.player;
+                        if(plr.hasOwnProperty("weapons")) {
+                            priorWeapons = Object.values(prev.player.weapons);
+                            for(var j = 0; j < Object.keys(priorWeapons).length; j++) {
+                                pWeap = priorWeapons[j];
+                                if(Object.keys(data.player.weapons)[i] == Object.keys(prev.player.weapons)[j]) {
+                                    if(pWeap.hasOwnProperty("ammo_clip")) {
+                                        weaponName = weapon.name;
+                                        weaponName = weaponName.replace("weapon_", "");
+                                        if(pWeap.ammo_clip > weapon.ammo_clip) {
+                                            tempNum = parseInt(pWeap.ammo_clip) - parseInt(weapon.ammo_clip);
+                                            UpdateStatypusData(`{"weapon":{"${weaponName}":{"bullets_shot":"${tempNum}"}}}`);
+                                        }
+                                    }
+                                    if(pWeap.hasOwnProperty("state")) {
+                                        weaponName = weapon.name;
+                                        weaponName = weaponName.replace("weapon_", "");
+                                        UpdateStatypusData(`{"weapon":{"${weaponName}":{"times_reloaded":"1"}}}`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -252,7 +293,7 @@ function SetChallengeStats() {
     var lblChallengeDesc = document.getElementById("lblChallengeDesc");
     var lblChallengeDuration = document.getElementById("lblChallengeDuration");
     var lblChallengeStatus = document.getElementById("lblChallengeStatus");
-    if(StatypusConnected()) {
+    if(ConnectToStatypus()) {
         if(activeChallenge != "null") {
             aimForRound = activeChallengeStartRound+activeChallengeDuration;
             lblChallengeTitle.classList = "text-dark";
