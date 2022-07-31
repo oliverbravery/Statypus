@@ -21,11 +21,7 @@
        <div class="header-nav" id="header-menu">
           <div class="nav-right">
              <div class="nav-item has-sub toggle-hover" id="dropdown">
-                <a class="nav-dropdown-link">Menu</a> 
-                <ul class="dropdown-menu dropdown-animated" role="menu">
-                   <li role="menu-item"><a href="index.html">Home Page</a></li>
-                   <li role="menu-item"><a href="DEVpage.html">DEV</a></li>
-                </ul>
+                <a href="https://oliverbravery.github.io/" target="_blank">Oliver Bravery</a> 
              </div>
           </div>
        </div>
@@ -73,11 +69,92 @@
                      </div>
                   </div>
                </div>
-
            </div>
+         </div> 
+      </div>
+   </section>
+   <div class="divider"></div>
+   <section id="statsSection" class="section p-5">
+      <div class="hero-body">
+         <div class="col-6 uppercase">
+            <div class="content">
+               <div class="u-text-center">
+                  <h4 class="uppercase">📊 Statypus Statistics 📊</h4>
+                  <section id="playerStats">
+                     <div class="row">
+                        <div class="col">
+                           <div class="card" >
+                              <div class="content u-text-center pt-3">
+                                  <h6>☠️ Kills ☠️</h6>
+                                  <p id="playerKills">Unknown</p>
+                              </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                           <div class="card">
+                              <div class="content u-text-center pt-3">
+                                  <h6>⚰️ Deaths ⚰️</h6>
+                                  <p id="playerDeaths">Unknown</p>
+                              </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                           <div class="card">
+                              <div class="content u-text-center pt-3">
+                                  <h6>🤜 Assists 🤛</h6>
+                                  <p id="playerAssists">Unknown</p>
+                              </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                           <div class="card">
+                              <div class="content u-text-center pt-3">
+                                  <h6>🏆 Points 🏆</h6>
+                                  <p id="playerPoints">Unknown</p>
+                              </div>
+                          </div>
+                        </div>
+                     </div>
+                  </section>
+                  <section id="weaponStats" class="card">
+                     <div class="u-text-center pt-3">
+                        <h6>🔫 Weapon Stats 🔫</h6>
+                     </div>
+                     <div class="level-content u-center">
+                        <p class="mr-1 lowercase">Weapon:</p>
+                        <select id="weaponSelect" onchange="DisplayWeaponDetails()" class="select w-20p" placeholder="Choose Weapon">
+                        </select>
+                     </div>
+                     <!-- Weapon info display -->
+                     <div class="row">
+                        <div class="col">
+                           <div class="row">
+                              <div class="col">
+                                 <p>Times reloaded: </p>
+                              </div>
+                              <div class="col">
+                                 <p id="weaponReloads">8</p>
+                              </div>
+                           </div>
+                        </div>
+                        <div class="col">
+                           <div class="row">
+                              <div class="col">
+                                 <p>Bullets shot: </p>
+                              </div>
+                              <div class="col">
+                                 <p id="weaponBulletsShot">20</p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </section>
+               </div>
+            </div>
          </div>
       </div>
    </section>
+
  </body>
 
 </html>

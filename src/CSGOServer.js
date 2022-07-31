@@ -36,9 +36,10 @@ statypusPort.on('open', function() {
             for(var i = 0; i < tempData.length; i++){
                 if(tempData[i].includes("!CONFIG")){
                     var tempStr = tempData[i].substring(tempData[i].indexOf("{"));
-                    console.log("The data>"+ tempStr);
                     try {
                         fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
+                        DisplayWeaponDetails();
+                        UpdateVisableStatistics();
                     }
                     catch(err){console.log("error writing to file");}
                 }
@@ -323,4 +324,42 @@ function SetChallengeStats() {
         lblChallengeStatus.classList = "text-warning";
     }
 }
+
+function DisplayWeaponDetails() {
+    let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
+    let data = JSON.parse(storedData);
+    selectObj = document.getElementById("weaponSelect");
+    weaponID = selectObj.value;
+    weaponDetailsJSON = data.weapon[weaponID];
+    console.log(weaponDetailsJSON);
+    document.getElementById("weaponReloads").innerText = weaponDetailsJSON.times_reloaded;
+    document.getElementById("weaponBulletsShot").innerText = weaponDetailsJSON.bullets_shot;
+}
+
+function PopulateWeaponList() {
+    selectObj = document.getElementById("weaponSelect");
+    let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
+    let data = JSON.parse(storedData);
+    let weapons = data.weapon;
+    console.log(weapons);
+    Object.keys(weapons).forEach(function(key) {
+        var opt = document.createElement("option");
+        opt.value = key;
+        opt.innerText = weapons[key].name;
+        selectObj.add(opt);
+      });
+    DisplayWeaponDetails();
+}
+
+function UpdateVisableStatistics(){
+    let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
+    let data = JSON.parse(storedData);
+    document.getElementById("playerDeaths").innerText = data.player.deaths;
+    document.getElementById("playerAssists").innerText = data.player.assists;
+    document.getElementById("playerKills").innerText = data.player.kills;
+    document.getElementById("playerPoints").innerText = data.player.points;
+}
+
+PopulateWeaponList();
+UpdateVisableStatistics();
 
