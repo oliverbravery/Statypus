@@ -15,6 +15,7 @@ activeChallengeDuration = "null";
 activeChallengeStartRound = "null";
 
 currentData = [0,0,0];
+currentWeaponName = null;
 
 currentRound = "null";
 gameInProgress = false;
@@ -24,103 +25,107 @@ lastPacketReceived = "null";
 //For serial
 var statypusPort = new SerialPort({path: "COM4", baudRate: 9600, autoOpen: false,});
 statypusPort.setEncoding('ascii');
-statypusPort.open();
-statypusPort.on('open', function() {
-    console.log('Serial port open');
-    ConnectToStatypus();
-    statypusPort.on('data', function(data) {
+
+function StartStatypusPort() {
+    statypusPort.open();
+    statypusPort.on('open', function() {
+        console.log('Serial port open');
         ConnectToStatypus();
-        // console.log(data);
-        if(data.includes("!CONFIG")){
-            tempData = data.split("\r\n");
-            for(var i = 0; i < tempData.length; i++){
-                if(tempData[i].includes("!CONFIG")){
-                    var tempStr = tempData[i].substring(tempData[i].indexOf("{"));
-                    try {
-                        fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
-                        DisplayWeaponDetails();
-                        UpdateVisableStatistics();
+        statypusPort.on('data', function(data) {
+            ConnectToStatypus();
+            // console.log(data);
+            if(data.includes("!CONFIG")){
+                tempData = data.split("\r\n");
+                for(var i = 0; i < tempData.length; i++){
+                    if(tempData[i].includes("!CONFIG")){
+                        var tempStr = tempData[i].substring(tempData[i].indexOf("{"));
+                        try {
+                            fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
+                            DisplayWeaponDetails();
+                            UpdateVisableStatistics();
+                        }
+                        catch(err){console.log("error writing to file");}
                     }
-                    catch(err){console.log("error writing to file");}
                 }
             }
-        }
-        statypusPort.flush(err => {});
+            statypusPort.flush(err => {});
+        });
     });
-});
+}
 
 function UpdateStatypusData(incrementJSONString) {
     statypusPort.write(`\r\n$UPDATE-DATA${incrementJSONString}`);
+    statypusPort.write("\r\n$GET-DATA");
 }
 
 function RequestStatypusData() {
     statypusPort.write(`\r\n$GET-DATA`);
 }
 //end serial
-
-SetChallengeStats();
  
-server = http.createServer( function(req, res) 
-{
-    if (req.method == 'POST') 
-	{
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        var body = '';
-        req.on('data', function (data) 
-		{
-            body += data;
-        });
-        req.on('end', function () 
-		{
-        	res.end( '' );
-			
-			if (res.statusCode === 200) 
-			{
-				try
-				{
-                    lastPacketReceived = new Date();
-					var data = JSON.parse(body);
-                    if(IsInGame(data) && data.provider.steamid == data.player.steamid) {
-                        CheckChallengeCompletion(data);
-                        if(!data.hasOwnProperty("map")) {gameInProgress = false; currentRound = "null";}
-                        else if(data.map.phase == "gameover") {gameInProgress = false; currentRound = "null";}
-                        else if(data.map.phase != "gameover") {gameInProgress = true;}
-                        if(gameInProgress) {
-                            currentRound = data.map.round; 
-                        }
-                        if(IsInGame(data)) {
-                            ik = data.player.match_stats.kills;
-                            ia = data.player.match_stats.assists;
-                            id = data.player.match_stats.deaths;
-                            var incrementVals = [0,0,0];
-                            if(ik != currentData[0]) {incrementVals[0]=ik-currentData[0];}
-                            if(ia != currentData[1]) {incrementVals[1]=ia-currentData[1];}
-                            if(id != currentData[2]) {incrementVals[2]=id-currentData[2];}
-                            currentData[0] = parseInt(ik);
-                            currentData[1] = parseInt(ia);
-                            currentData[2] = parseInt(id);
-                            var updateString = `{"player":{"kills":"${incrementVals[0]}","assists":"${incrementVals[1]}","deaths":"${incrementVals[2]}"}}`;
-                            UpdateStatypusData(updateString);
-                        }
-                        else {currentData = [0,0,0]; gameInProgress = false; currentRound = "null";}
-                    }
-                    else {
-                        currentData = [0,0,0]; gameInProgress = false; currentRound = "null";
-                    }
-                    SetChallengeStats();
-                    UpdateStatypusWeaponDetails(data);
-					console.log("Received message: " + body);					
-				} catch (e) {}
-			}				
-        });
-    }
-    else
+function StartCSGOServer() {
+    server = http.createServer( function(req, res) 
     {
-        res.writeHead(200);
-        res.end();
-    }
-});
-server.listen(serverport, host);
+        if (req.method == 'POST') 
+        {
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            var body = '';
+            req.on('data', function (data) 
+            {
+                body += data;
+            });
+            req.on('end', function () 
+            {
+                res.end( '' );
+                
+                if (res.statusCode === 200) 
+                {
+                    try
+                    {
+                        lastPacketReceived = new Date();
+                        var data = JSON.parse(body);
+                        if(IsInGame(data) && data.provider.steamid == data.player.steamid) {
+                            CheckChallengeCompletion(data);
+                            if(!data.hasOwnProperty("map")) {gameInProgress = false; currentRound = "null";}
+                            else if(data.map.phase == "gameover") {gameInProgress = false; currentRound = "null";}
+                            else if(data.map.phase != "gameover") {gameInProgress = true;}
+                            if(gameInProgress) {
+                                currentRound = data.map.round; 
+                            }
+                            if(IsInGame(data)) {
+                                ik = data.player.match_stats.kills;
+                                ia = data.player.match_stats.assists;
+                                id = data.player.match_stats.deaths;
+                                var incrementVals = [0,0,0];
+                                if(ik != currentData[0]) {incrementVals[0]=ik-currentData[0];}
+                                if(ia != currentData[1]) {incrementVals[1]=ia-currentData[1];}
+                                if(id != currentData[2]) {incrementVals[2]=id-currentData[2];}
+                                currentData[0] = parseInt(ik);
+                                currentData[1] = parseInt(ia);
+                                currentData[2] = parseInt(id);
+                                var updateString = `{"player":{"kills":"${incrementVals[0]}","assists":"${incrementVals[1]}","deaths":"${incrementVals[2]}"}}`;
+                                UpdateStatypusData(updateString);
+                            }
+                            else {currentData = [0,0,0]; gameInProgress = false; currentRound = "null";}
+                        }
+                        else {
+                            currentData = [0,0,0]; gameInProgress = false; currentRound = "null";
+                        }
+                        SetChallengeStats();
+                        UpdateStatypusWeaponDetails(data);
+                        // console.log("Received message: " + body);					
+                    } catch (e) {}
+                }				
+            });
+        }
+        else
+        {
+            res.writeHead(200);
+            res.end();
+        }
+    });
+    server.listen(serverport, host);
+}
 
 function IsInGame(jData) {
     if(jData.hasOwnProperty("map") || jData.hasOwnProperty("player")) {
@@ -254,9 +259,12 @@ function CheckChallengeCompletion(data) {
                                     if(pWeap.hasOwnProperty("ammo_clip")) {
                                         if(Object.keys(data.player.weapons)[i] == Object.keys(prev.player.weapons)[j]) {
                                             if(parseInt(pWeap.ammo_clip) > parseInt(weapon.ammo_clip)) {
-                                                activeChallengeFailed = true;
-                                                console.log("DEBUG: Challenge Failed");
-                                                ChallengeComplete();
+                                                if(currentWeaponName == weapon.name) {
+                                                    activeChallengeFailed = true;
+                                                    console.log("DEBUG: Challenge Failed");
+                                                    ChallengeComplete();
+                                                }
+                                                currentWeaponName = weapon.name;
                                             }
                                         }
                                     }
@@ -331,7 +339,6 @@ function DisplayWeaponDetails() {
     selectObj = document.getElementById("weaponSelect");
     weaponID = selectObj.value;
     weaponDetailsJSON = data.weapon[weaponID];
-    console.log(weaponDetailsJSON);
     document.getElementById("weaponReloads").innerText = weaponDetailsJSON.times_reloaded;
     document.getElementById("weaponBulletsShot").innerText = weaponDetailsJSON.bullets_shot;
 }
@@ -341,7 +348,6 @@ function PopulateWeaponList() {
     let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
     let data = JSON.parse(storedData);
     let weapons = data.weapon;
-    console.log(weapons);
     Object.keys(weapons).forEach(function(key) {
         var opt = document.createElement("option");
         opt.value = key;
@@ -360,6 +366,14 @@ function UpdateVisableStatistics(){
     document.getElementById("playerPoints").innerText = data.player.points;
 }
 
-PopulateWeaponList();
-UpdateVisableStatistics();
 
+
+function startUp() {
+    StartStatypusPort();
+    SetChallengeStats();
+    StartCSGOServer();
+    PopulateWeaponList();
+    UpdateVisableStatistics();
+}
+
+startUp();
