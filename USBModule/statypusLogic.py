@@ -8,6 +8,8 @@ By Oliver Bravery
     ~"$UPDATE-DATA" - takes input of json containing keys and the value of what they wish the config
                         file to be updated with (if k:1 parsed then config k will be incremented by 1)
                         example-"$UPDATE-DATA{"k'":"2","a":"1"}"
+    ~"!CHALLENGE-REQUEST" - sent from this device over serial to indicate that the hall sensor has been
+                                activated.
 """
 
 import ujson
@@ -15,11 +17,16 @@ import machine
 import time
 import os
 from machine import Pin
+import utime
+import _thread
 
 led = Pin(25, Pin.OUT)
+hall_sens = Pin(28, Pin.IN)
 
 filePath = "saveConfig.json"
 templatePath = "template.json"
+
+programOn = True
 
 def file_or_dir_exists(filename):
     try:
@@ -69,34 +76,44 @@ def UpdateConfigJSON(newDetailsJSON):
     UpdateJSON(newDetailsJSON, configJSON)
     SaveToConfigJSON(configJSON)
     
+def SendChallengeRequest(pin):
+    print("\r\n!CHALLENGE-REQUEST")
+    print("\r\n")
+
+hall_sens.irq(trigger=Pin.IRQ_FALLING, handler=SendChallengeRequest)
+
 if __name__ == "__main__":
-    programOn = True
     while programOn:
         try:
             serialRec = input()
-            jsonObj = "null"
-            if "$GET-DATA" in serialRec:
-                configJ = AquireConfigJSON()
-                print("\r\n!CONFIG" + ujson.dumps(configJ, separators=None))
-            elif "$GET-CONNECTED" in serialRec:
-                print("\r\n!CONNECTED")
-            elif "$UPDATE-DATA" in serialRec:
-                startIndex = serialRec.find("{")
-                splitString = serialRec[startIndex:]
-                jsonObj = ujson.loads(splitString)
-                t1 = serialRec.find("{")
-                t2 = serialRec[t1:]
-                uiData = ujson.loads(t2)
-                UpdateConfigJSON(uiData)
-            elif "$DEBUG" in serialRec:
-                print("\r\n!LED TOGGLED")
-                led.toggle()
-            elif "$TURN-OFF-PROGRAM" in serialRec:
-                programOn = False
         except:
             print("")
+        jsonObj = "null"
+        if "$GET-DATA" in serialRec:
+            configJ = AquireConfigJSON()
+            print("\r\n!CONFIG" + ujson.dumps(configJ, separators=None))
+            print("\r\n")
+        elif "$GET-CONNECTED" in serialRec:
+            print("\r\n!CONNECTED")
+            print("\r\n")
+        elif "$UPDATE-DATA" in serialRec:
+            startIndex = serialRec.find("{")
+            splitString = serialRec[startIndex:]
+            jsonObj = ujson.loads(splitString)
+            t1 = serialRec.find("{")
+            t2 = serialRec[t1:]
+            uiData = ujson.loads(t2)
+            UpdateConfigJSON(uiData)
+        elif "$DEBUG" in serialRec:
+            print("\r\n!LED TOGGLED")
+            print("\r\n")
+            led.toggle()
+        elif "$TURN-OFF-PROGRAM" in serialRec:
+            programOn = False
             
             
                     
             
+
+
 

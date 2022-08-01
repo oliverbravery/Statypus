@@ -45,6 +45,7 @@
     }
   },
   "dependencies": {
+    "@serialport/parser-readline": "^10.3.0",
     "electron-squirrel-startup": "^1.0.0",
     "http": "0.0.1-security",
     "read-text-file": "^1.1.0",

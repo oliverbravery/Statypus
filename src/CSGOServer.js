@@ -5,6 +5,7 @@ const { stat } = require('fs');
 const path = require('path');
 var readTextFile = require('read-text-file');
 const { SerialPort } = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline')
  
 serverport = 50891;
 host = '127.0.0.1';
@@ -25,32 +26,40 @@ lastPacketReceived = "null";
 //For serial
 var statypusPort = new SerialPort({path: "COM4", baudRate: 9600, autoOpen: false,});
 statypusPort.setEncoding('ascii');
+const parser = statypusPort.pipe(new ReadlineParser({ delimiter: '\r\n' }))
 
 function StartStatypusPort() {
     statypusPort.open();
     statypusPort.on('open', function() {
         console.log('Serial port open');
+        statypusPort.write("\r\n$GET-DATA");
         ConnectToStatypus();
-        statypusPort.on('data', function(data) {
+        parser.on('data', function(data) {
+            console.log("Data recieved from statypus")
             ConnectToStatypus();
-            // console.log(data);
-            if(data.includes("!CONFIG")){
-                tempData = data.split("\r\n");
-                for(var i = 0; i < tempData.length; i++){
-                    if(tempData[i].includes("!CONFIG")){
-                        var tempStr = tempData[i].substring(tempData[i].indexOf("{"));
-                        try {
-                            fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
-                            DisplayWeaponDetails();
-                            UpdateVisableStatistics();
-                        }
-                        catch(err){console.log("error writing to file");}
+            d = data;
+            if(d != ""){
+                if(d.includes("!CONFIG")){
+                    var tempStr = d.substring(d.indexOf("{"));
+                    console.log(tempStr)
+                    try {
+                        fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
+                        DisplayWeaponDetails();
+                        UpdateVisableStatistics();
                     }
+                    catch(err){console.log("error writing to file");}
+                }
+                else if(d.includes("!CHALLENGE-REQUEST")){
+                    console.log("xxx");
+                    GetNewChallenge();
                 }
             }
             statypusPort.flush(err => {});
         });
     });
+}
+function DEBUGSTAT(){
+    statypusPort.write("\r\n$DEBUG");
 }
 
 function UpdateStatypusData(incrementJSONString) {
@@ -188,7 +197,7 @@ function GetChallenge() {
 
 function ConnectToStatypus() {
     //Connect to the statypus device. returns true if connected, false if not
-    if(statypusPort.isOpen) {
+    if(statypusPort.isOpen || statypusPort.isOpening) {
         var buttonEl = document.getElementById("btnSearchForStatypus");
         buttonEl.classList = "btn-success";
         var textEl = document.getElementById("statypusStatusText");
@@ -279,21 +288,23 @@ function CheckChallengeCompletion(data) {
 }
 
 function GetNewChallenge() {
-    var currentTime = new Date();
-    var tDiff = (currentTime.getTime() - lastPacketReceived.getTime()) / 1000; 
-    console.log(tDiff);
-    if(gameInProgress && currentRound != "null" && tDiff != "null" && (tDiff < 30)) {
-        activeChallenge = GetChallenge();
-        //l = 1-5; u = all game; lu = limited or unlimited
-        if(activeChallenge.duration == "l") {activeChallengeDuration = GetRandomNumber(1,6);}
-        else if(activeChallenge.duration == "lu") {let x = GetRandomNumber(0,2); 
-            if(x == 0) {activeChallengeDuration = "end";} else{activeChallengeDuration = GetRandomNumber(1,6);}} 
-        else if(activeChallenge.duration == "u") {activeChallengeDuration = "end";}
-        activeChallengeStartRound = currentRound;
-        console.log(activeChallenge.name);
-        console.log(activeChallengeDuration);
-        console.log("current round" + currentRound);
-        SetChallengeStats();
+    if(gameInProgress){
+        var currentTime = new Date();
+        var tDiff = (currentTime.getTime() - lastPacketReceived.getTime()) / 1000; 
+        console.log(tDiff);
+        if(gameInProgress && currentRound != "null" && tDiff != "null" && (tDiff < 30)) {
+            activeChallenge = GetChallenge();
+            //l = 1-5; u = all game; lu = limited or unlimited
+            if(activeChallenge.duration == "l") {activeChallengeDuration = GetRandomNumber(1,6);}
+            else if(activeChallenge.duration == "lu") {let x = GetRandomNumber(0,2); 
+                if(x == 0) {activeChallengeDuration = "end";} else{activeChallengeDuration = GetRandomNumber(1,6);}} 
+            else if(activeChallenge.duration == "u") {activeChallengeDuration = "end";}
+            activeChallengeStartRound = currentRound;
+            console.log(activeChallenge.name);
+            console.log(activeChallengeDuration);
+            console.log("current round" + currentRound);
+            SetChallengeStats();
+        }
     }
 }
 
