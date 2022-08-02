@@ -22,7 +22,8 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js')
     }
   });
-  // mainWindow.setMenuBarVisibility(false);
+  mainWindow.setIcon(path.join(__dirname, 'favicon.ico'));
+  mainWindow.setMenuBarVisibility(false);
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'StartPage/index.html'));
 };

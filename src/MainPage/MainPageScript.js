@@ -5,7 +5,8 @@ const { stat } = require('fs');
 const path = require('path');
 var readTextFile = require('read-text-file');
 const { SerialPort } = require('serialport');
-const { ReadlineParser } = require('@serialport/parser-readline')
+const { ReadlineParser } = require('@serialport/parser-readline');
+const { start } = require('repl');
  
 serverport = 50891;
 host = '127.0.0.1';
@@ -22,6 +23,7 @@ currentRound = "null";
 gameInProgress = false;
 
 lastPacketReceived = "null";
+lastStatypusPortPacketReceived = "null";
 
 //For serial
 var statypusPort = new SerialPort({path: "COM4", baudRate: 9600, autoOpen: false,});
@@ -32,8 +34,9 @@ function StartStatypusPort() {
     statypusPort.open();
     statypusPort.on('open', function() {
         console.log('Serial port open');
-        statypusPort.write("\r\n$GET-DATA");
         ConnectToStatypus();
+        statypusPort.write("\r\n$GET-DATA");
+        statypusPort.write("\r\n$GET-DATA");
         parser.on('data', function(data) {
             console.log("Data recieved from statypus")
             ConnectToStatypus();
@@ -41,16 +44,19 @@ function StartStatypusPort() {
             if(d != ""){
                 if(d.includes("!CONFIG")){
                     var tempStr = d.substring(d.indexOf("{"));
-                    console.log(tempStr)
                     try {
                         fs.writeFileSync(path.resolve(__dirname,"..",   'StoredData/data.txt'), tempStr);
+                        if(lastStatypusPortPacketReceived == "null"){
+                            lastStatypusPortPacketReceived = "NOT NULL";
+                            PopulateWeaponList();
+                            UpdateVisableStatistics();
+                        }
                         DisplayWeaponDetails();
                         UpdateVisableStatistics();
                     }
                     catch(err){console.log("error writing to file");}
                 }
                 else if(d.includes("!CHALLENGE-REQUEST")){
-                    console.log("xxx");
                     GetNewChallenge();
                 }
             }
@@ -58,17 +64,10 @@ function StartStatypusPort() {
         });
     });
 }
-function DEBUGSTAT(){
-    statypusPort.write("\r\n$DEBUG");
-}
 
 function UpdateStatypusData(incrementJSONString) {
     statypusPort.write(`\r\n$UPDATE-DATA${incrementJSONString}`);
     statypusPort.write("\r\n$GET-DATA");
-}
-
-function RequestStatypusData() {
-    statypusPort.write(`\r\n$GET-DATA`);
 }
 //end serial
  
