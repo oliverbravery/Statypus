@@ -43,7 +43,7 @@ function StartStatypusPort() {
                     var tempStr = d.substring(d.indexOf("{"));
                     console.log(tempStr)
                     try {
-                        fs.writeFileSync(path.resolve(__dirname, 'temp/data.txt'), tempStr);
+                        fs.writeFileSync(path.resolve(__dirname,"..",   'StoredData/data.txt'), tempStr);
                         DisplayWeaponDetails();
                         UpdateVisableStatistics();
                     }
@@ -187,7 +187,7 @@ function UpdateStatypusWeaponDetails(data) {
 
 function GetChallenge() {
     activeChallengeFailed = false;
-    let rawdata = fs.readFileSync(path.resolve(__dirname, 'challenges.json'));
+    let rawdata = fs.readFileSync(path.resolve(__dirname,"..", 'StoredData/challenges.json'));
     let challengesJSON = JSON.parse(rawdata);
     let challenges = challengesJSON.Challenges
     values = Object.values(challenges);
@@ -243,7 +243,7 @@ function CheckChallengeCompletion(data) {
     if(activeChallenge != "null"){
         if(data.map.phase=="gameover" && activeChallengeDuration=="end") {ChallengeComplete();}
         else if(activeChallengeDuration != "end" && activeChallengeDuration != "null"){
-            //Called when the challenge is round coutned
+            //Called when the challenge is round counted
             currentRound = data.map.round;
             aimForRound = activeChallengeStartRound+activeChallengeDuration;
             if(parseInt(currentRound) == parseInt(aimForRound)) {ChallengeComplete(); }
@@ -345,7 +345,7 @@ function SetChallengeStats() {
 }
 
 function DisplayWeaponDetails() {
-    let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
+    let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
     let data = JSON.parse(storedData);
     selectObj = document.getElementById("weaponSelect");
     weaponID = selectObj.value;
@@ -356,7 +356,7 @@ function DisplayWeaponDetails() {
 
 function PopulateWeaponList() {
     selectObj = document.getElementById("weaponSelect");
-    let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
+    let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
     let data = JSON.parse(storedData);
     let weapons = data.weapon;
     Object.keys(weapons).forEach(function(key) {
@@ -369,7 +369,7 @@ function PopulateWeaponList() {
 }
 
 function UpdateVisableStatistics(){
-    let storedData = readTextFile.readSync(path.resolve(__dirname, 'temp/data.txt'));
+    let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
     let data = JSON.parse(storedData);
     document.getElementById("playerDeaths").innerText = data.player.deaths;
     document.getElementById("playerAssists").innerText = data.player.assists;
