@@ -7,7 +7,10 @@ var readTextFile = require('read-text-file');
 const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 const { start } = require('repl');
- 
+const Store = require('electron-store');
+
+const store = new Store();
+
 serverport = 50891;
 host = '127.0.0.1';
 
@@ -35,17 +38,17 @@ function StartStatypusPort() {
     statypusPort.on('open', function() {
         console.log('Serial port open');
         ConnectToStatypus();
-        statypusPort.write("\r\n$GET-DATA");
-        statypusPort.write("\r\n$GET-DATA");
+        statypusPort.write("$GET-DATA\r\n");
         parser.on('data', function(data) {
-            console.log("Data recieved from statypus")
+            console.log("Data recieved from statypus>> " + data);
             ConnectToStatypus();
             d = data;
             if(d != ""){
                 if(d.includes("!CONFIG")){
                     var tempStr = d.substring(d.indexOf("{"));
                     try {
-                        fs.writeFileSync(path.resolve(__dirname,"..",   'StoredData/data.txt'), tempStr);
+                        // fs.writeFileSync(path.resolve(__dirname,"..",   'StoredData/data.txt'), tempStr);
+                        store.set("data", tempStr);
                         if(lastStatypusPortPacketReceived == "null"){
                             lastStatypusPortPacketReceived = "NOT NULL";
                             PopulateWeaponList();
@@ -66,8 +69,7 @@ function StartStatypusPort() {
 }
 
 function UpdateStatypusData(incrementJSONString) {
-    statypusPort.write(`\r\n$UPDATE-DATA${incrementJSONString}`);
-    statypusPort.write("\r\n$GET-DATA");
+    statypusPort.write(`$UPDATE-DATA${incrementJSONString}\r\n`);
 }
 //end serial
  
@@ -88,6 +90,7 @@ function StartCSGOServer() {
                 
                 if (res.statusCode === 200) 
                 {
+                    console.log("CSGO Packet recieved");
                     try
                     {
                         lastPacketReceived = new Date();
@@ -186,7 +189,8 @@ function UpdateStatypusWeaponDetails(data) {
 
 function GetChallenge() {
     activeChallengeFailed = false;
-    let rawdata = fs.readFileSync(path.resolve(__dirname,"..", 'StoredData/challenges.json'));
+    // let rawdata = fs.readFileSync(path.resolve(__dirname,"..", 'StoredData/challenges.json'));
+    let rawdata = store.get("challenges");
     let challengesJSON = JSON.parse(rawdata);
     let challenges = challengesJSON.Challenges
     values = Object.values(challenges);
@@ -238,7 +242,6 @@ function GetRandomNumber(Min,Max) {
 }
 
 function CheckChallengeCompletion(data) {
-    console.log("packet received");
     if(activeChallenge != "null"){
         if(data.map.phase=="gameover" && activeChallengeDuration=="end") {ChallengeComplete();}
         else if(activeChallengeDuration != "end" && activeChallengeDuration != "null"){
@@ -344,7 +347,8 @@ function SetChallengeStats() {
 }
 
 function DisplayWeaponDetails() {
-    let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
+    // let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
+    let storedData = store.get("data");
     let data = JSON.parse(storedData);
     selectObj = document.getElementById("weaponSelect");
     weaponID = selectObj.value;
@@ -355,7 +359,8 @@ function DisplayWeaponDetails() {
 
 function PopulateWeaponList() {
     selectObj = document.getElementById("weaponSelect");
-    let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
+    // let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
+    let storedData = store.get("data");
     let data = JSON.parse(storedData);
     let weapons = data.weapon;
     Object.keys(weapons).forEach(function(key) {
@@ -368,7 +373,8 @@ function PopulateWeaponList() {
 }
 
 function UpdateVisableStatistics(){
-    let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
+    // let storedData = readTextFile.readSync(path.resolve(__dirname,"..", 'StoredData/data.txt'));
+    let storedData = store.get("data");
     let data = JSON.parse(storedData);
     document.getElementById("playerDeaths").innerText = data.player.deaths;
     document.getElementById("playerAssists").innerText = data.player.assists;

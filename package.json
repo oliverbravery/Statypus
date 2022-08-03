@@ -9,8 +9,26 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "build": "electron-builder"
   },
+
+  "build":{
+    "appId":"statypus",
+    "win": {
+      "target": "nsis",
+      "icon": "favicon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "installerIcon": "favicon.ico",
+      "uninstallerIcon": "favicon.ico",
+      "uninstallDisplayName": "statypus-uninstaller",
+      "license":"license.md",
+      "allowToChangeInstallationDirectory": false
+    }
+  },
+
   "keywords": [],
   "author": {
     "name": "oliverbravery",
@@ -47,6 +65,7 @@
   "dependencies": {
     "@serialport/parser-readline": "^10.3.0",
     "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.1.0",
     "http": "0.0.1-security",
     "read-text-file": "^1.1.0",
     "serialport": "^10.4.0"
@@ -58,6 +77,7 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.64",
     "@electron-forge/maker-zip": "^6.0.0-beta.64",
     "electron": "19.0.9",
+    "electron-builder": "^23.3.3",
     "electron-packager": "^15.5.1"
   }
 }

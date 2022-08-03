@@ -1,8 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const Store = require('electron-store');
 
 
 const source = document.getElementById('CSGOPath');
+
+const store = new Store();
 
 
 source.addEventListener('input', CheckPath);
@@ -16,7 +19,7 @@ function SubmitPath(){
             if(addedFile){
                 //Update config file
                 UpdateConfigFile(userInput);
-                window.location.href = path.resolve(__dirname,"..", 'MainPage/MainPage.html');
+                window.location.replace(path.join(__dirname, "..", 'MainPage/MainPage.html'));
             }
         }
         else {
@@ -28,8 +31,10 @@ function SubmitPath(){
 function UpdateConfigFile(userInput) { 
     dataToWrite = userInput;
     console.log("d>"+dataToWrite);
-    fs.writeFile(path.resolve(__dirname,"..", 'StoredData/CSGO_Path.txt'), dataToWrite, err => {
-    });
+    store.set("csgoPath",dataToWrite);
+    // fs.writeFile(path.join(__dirname,"..", 'StoredData/CSGO_Path.txt'), dataToWrite, err => {
+    //     console.log("err");
+    // });
 }
 
 function AddConfigFile(csgoPath) {

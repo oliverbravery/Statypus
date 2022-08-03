@@ -1,0 +1,1 @@
+You (the user) give Statypus permission to create a game state integration file in the CSGO directory.
