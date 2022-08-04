@@ -72,18 +72,23 @@ def UpdateJSON(ud,d):
             d[k] = int(d[k]) + int(v)
 
 def UpdateConfigJSON(newDetailsJSON):
-    configJSON = AquireConfigJSON()
-    UpdateJSON(newDetailsJSON, configJSON)
-    SaveToConfigJSON(configJSON)
+    try:
+        configJSON = AquireConfigJSON()
+        UpdateJSON(newDetailsJSON, configJSON)
+        SaveToConfigJSON(configJSON)
+        configJ = AquireConfigJSON()
+        print("!CONFIG" + ujson.dumps(configJ, separators=None) + "\r\n")
+    except:
+        pass
     
 def SendChallengeRequest(pin):
-    print("\r\n!CHALLENGE-REQUEST")
-    print("\r\n")
+    print("!CHALLENGE-REQUEST\r\n")
 
 hall_sens.irq(trigger=Pin.IRQ_FALLING, handler=SendChallengeRequest)
 
 if __name__ == "__main__":
     while programOn:
+        serialRec = ""
         try:
             serialRec = input()
         except:
@@ -91,11 +96,9 @@ if __name__ == "__main__":
         jsonObj = "null"
         if "$GET-DATA" in serialRec:
             configJ = AquireConfigJSON()
-            print("\r\n!CONFIG" + ujson.dumps(configJ, separators=None))
-            print("\r\n")
+            print("!CONFIG" + ujson.dumps(configJ, separators=None) + "\r\n")
         elif "$GET-CONNECTED" in serialRec:
-            print("\r\n!CONNECTED")
-            print("\r\n")
+            print("!CONNECTED\r\n")
         elif "$UPDATE-DATA" in serialRec:
             startIndex = serialRec.find("{")
             splitString = serialRec[startIndex:]
@@ -105,15 +108,7 @@ if __name__ == "__main__":
             uiData = ujson.loads(t2)
             UpdateConfigJSON(uiData)
         elif "$DEBUG" in serialRec:
-            print("\r\n!LED TOGGLED")
-            print("\r\n")
+            print("!LED TOGGLED\r\n")
             led.toggle()
         elif "$TURN-OFF-PROGRAM" in serialRec:
             programOn = False
-            
-            
-                    
-            
-
-
-
